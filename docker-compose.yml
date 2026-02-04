@@ -1,0 +1,50 @@
+services:
+  # multi-worker coordination
+  redis:
+    image: redis:7-alpine
+    container_name: websocket-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - websocket-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # WebSocket Server (Single Worker)
+  app-single:
+    build: .
+    container_name: websocket-app-single
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - WORKERS=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - websocket-net
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # WebSocket Server (Multi-Worker)
+  app-multi:
+    build: .
+    container_name: websocket-app-multi
+    ports:
+      - "8001:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - WORKERS=4
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - websocket-net
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+networks:
+  websocket-net:
+    driver: bridge

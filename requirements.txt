@@ -1,0 +1,18 @@
+# FastAPI
+fastapi
+uvicorn[standard]
+
+# WebSocket
+websockets
+
+# Redis
+redis
+
+# Utilities
+pydantic
+pydantic-settings
+
+# Dev tools
+pre-commit
+mypy
+
